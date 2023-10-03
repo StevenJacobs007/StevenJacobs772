@@ -1,0 +1,82 @@
+---
+title: "lab_02"
+author: "derek willis"
+date: "2023-09-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load libraries and establish settings
+
+```{r}
+# Turn off scientific notation
+options(scipen=999)
+
+# Load the tidyverse. If you have not installed the tidyverse already, remove the # from the next line and run it first.  
+# install.packages('tidyverse')
+library(tidyverse)
+library(lubridate)
+```
+
+## Load Data
+
+Let's keep working with the UMD courses and Maryland campaign expense data we used in the pre_lab.
+
+```{r}
+umd_courses <- read_rds("data/umd_courses.rds")
+maryland_expenses <- read_csv("data/maryland_expenses.csv")
+```
+
+## Answer questions
+
+**Q1.** How many departments have offered the courses with "Climate" in the title and at least one seat? Which department has offered the most? **A1.**. 223 courses are offered with Climate in the title. Weather and Climate has the most with 270 seats.
+
+```{r}
+umd_courses |>
+  filter(str_detect(title, "Climate"), seats >= 1)
+
+```
+
+**Q2.** Of the departments listed in A1, which one is the most interesting to you, and why? 
+**A2.** The Future of Energy and Climate Policy seems interesting to me, because I would suppose that courses content would be ever-flowing. As even though I personally do not know much about climate policy, it has to be something that constantly changes and is looking for ways to improve. So to study it as a course would require a lot of research.
+
+**Q3** Which departments offered the most courses in the Fall 2023 term? And which departments in that term have at least one syllabus posted? Answer both of those questions and then compare the top five departments - how are they different?
+
+**A3.** The top 5 were English, School of Music, Communications, History, and Kinesiology... To compare, they all had a minimum of 1200 courses offered. English had 1617, School of Music had 1593, Communications had 1440, History had 1305, and Kin. had 1290.
+
+```{r}
+umd_courses |>
+  group_by(department) |>
+  summarise(Course_Count = n())
+```
+
+**Q4.** Using the Maryland campaign expenses data, change the datatype of the expenditure_date column so that it is a date and not a chr, saving the result as a new dataframe. Then create a new column for the month based on expenditure_date. Then write code that shows total amount spent each month by Wes Moore's committee (you'll need to search the data to find the exact name, and we're not looking in payee_name). Write a sentence describing the pattern of spending over time. 
+**A4.** The spending over time gradually increases as it comes closer to election date...
+
+```{r}
+maryland_expenses |>
+  mutate(expenditure_date = as.Date(expenditure_date, format = "%Y-%m-%d")) |>
+  mutate(expenditure_month = month(expenditure_date)) |>
+  filter(committee_name == "Wes Moore's Committee")
+
+```
+
+**Q5.** Using case_when(), create a column in the Maryland expenses data called `spending_location` indicating whether each record spent money in Maryland or outside Maryland. For records that are in Maryland, make the new column's value "In-state" and for all others, make it "Out of state". Then write code that shows the total amount of money spent in each category and describe the results. You can do this in one statement or break it up into two statements (saving the new column to your dataframe).
+**A5** I am truly stumped on this question... I have no idea where to start... I apologize
+
+```{r}
+
+
+
+
+```
+
+**Q6.** Choose your own adventure: using either the UMD courses or campaign expenses data, ask and answer a question that is different than the previous ones. You can use one of the ones you provided in the pre_lab. 
+**A6.** Use the maryland expenses data to solve which expense was for the purpose of the newspaper. Then solve to find which expense were made by by check or by card...
+
+```{r}
+maryland_expenses
+```
