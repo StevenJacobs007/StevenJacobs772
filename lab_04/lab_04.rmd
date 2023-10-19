@@ -89,6 +89,11 @@ head(maryland_expenses)
    5. Using that `payee_clean` column in your new dataframe, calculate the total amount of Facebook spending by each committee and present the results showing the committee that spent the most first.
 
 **A1.**
+```{r}
+ex
+```
+
+
 
 ```{r}
 
@@ -166,6 +171,10 @@ cat("Total Amount for Specific Names:", total_amount, "\n")
 **Q4.** The media expense data you cleaned also has a standardized purpose column. Write code to generate a list of the committees with the total amount of spending on online advertising. How does this list compare to the one from Q1 about top Facebook spenders? Of the top 5 committees who spent the most on Facebook ads from Q1, are there any that appear to have spent *all* of their online advertising dollars on Facebook?
 
 **A4.** It differs because the top ones here are solely based on physical objects that would assist to a campaign... Such as "Printing and Campaign Materials"
+
+```{r}
+
+```
 
 ```{r}
 expense.category.csv |>
