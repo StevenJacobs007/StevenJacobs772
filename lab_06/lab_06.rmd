@@ -1,0 +1,304 @@
+---
+title: "lab_06"
+author: "derek willis"
+date: "2022-03-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load libraries and establish settings
+
+```{r}
+# Turn off scientific notation
+options(scipen=999)
+
+# load your libraries
+library(tidyverse)
+library(lubridate)
+```
+
+## Getting Started
+
+This week we'll be combining and joining data to make it more useful and to ask some questions about it. We'll use some of our 911 overdose call data to do this. The first thing we want to do is to combine multiple counties' data into a single dataframe so that we can ask some questions. First, let's combine data from Cecil, Carroll and Allegany counties into a new dataframe.
+
+*Before* you combine them you'll need to clean up some of the column names to make the data easier to work with - make sure you have loaded the library to do that. You also need to make sure that each column has the same name and datatype (you can check the datatypes using `glimpse`). If any of them does not, you need to fix that.
+```{r}
+# load and combine the call data from those three counties
+glimpse(allegany_911)
+#
+colnames(allegany_911) <- tolower(colnames(allegany_911))
+```
+```{r}
+glimpse(carroll_911)
+#
+colnames(carroll_911) <- tolower(colnames(carroll_911))
+```
+
+```{r}
+glimpse(cecil_911)
+#
+colnames(cecil_911) <- tolower(colnames(cecil_911))
+```
+
+```{r}
+combined_911data <- bind_rows(cecil_911, allegany_911, carroll_911)
+
+view(combined_911data)
+```
+
+Then we'll join some demographic data with Baltimore City 911 calls and ask some questions of that. For that, you'll need to load the Baltimore City 911 data and the ZCTA demographic data, and join them based on the zip code. Remember, the zip codes in both dataframes must be the same datatype (and should be characters). You should start with your Baltimore 911 dataframe in creating your join. 
+
+```{r}
+# load and join the Baltimore-related data
+glimpse(baltimore_911)
+```
+
+```{r}
+glimpse(maryland_zcta)
+```
+
+```{r}
+baltimore_911 <- baltimore_911 |>
+  mutate(zip_code = as.character(zip_code))
+```
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(lubridate)
+library(janitor)
+
+# Join the data frames based on the "zip code" column
+maryland_zcta <- read_csv("data/maryland_zcta.csv") |>
+  clean_names() |>
+  mutate(zip_code = as.character(zcta5n))
+```
+
+```{r}
+joined_data_bmoremdzc <- left_join(baltimore_911, maryland_zcta, by = "zip_code")
+```
+
+```{r}
+view(joined_data_bmoremdzc)
+```
+
+## Answer questions
+
+Q1. Let's start with our data from Allegany, Cecil and Carroll counties. Write code to generate a dataframe that shows the total number of calls for each county. What's the order of counties from most calls to least?
+
+A1. Carroll, Cecil, Allegany
+
+```{r}
+# Specify the word you want to count (replace "specific_word" with your word)
+Cecil <- "Cecil"
+
+# Count the occurrences of the specific word in the "county" column
+word_count <- sum(combined_911data$county == Cecil)
+
+# Print the count
+print(word_count)
+
+```
+
+```{r}
+# Specify the word you want to count (replace "specific_word" with your word)
+Allegany <- "Allegany"
+
+# Count the occurrences of the specific word in the "county" column
+word_count <- sum(combined_911data$county == Allegany)
+
+# Print the count
+print(word_count)
+```
+
+```{r}
+# Specify the word you want to count (replace "specific_word" with your word)
+Carroll <- "Carroll"
+
+# Count the occurrences of the specific word in the "county" column
+word_count <- sum(combined_911data$county == Carroll)
+
+# Print the count
+print(word_count)
+```
+
+Q2. In your combined dataframe that you used in A1, add a column for the month of each call, then write code to show the total number of calls per county and month. Are there any outliers or noteworthy results? Describe the general pattern of the results. 
+
+Then calculate the most calls per county and location. Which location had the most calls - where and what is that location?
+
+A2. I find it interesting that for the counties, August and September 2022 contained the most calls. Steady decrease by December 2022. Cecil County had the most calls with 55 in August 2022. 
+
+```{r}
+library(dplyr)
+
+# Assuming your data frame is named 'df'
+
+# Extract the month from the date column and add it as a new column
+combined_911data <- combined_911data %>%
+  mutate(Month = format(as.Date(date, format = "%Y-%m-%d"), "%Y-%m"))
+
+# Group the data by location and month, and count the number of calls
+result <- combined_911data %>%
+  group_by(county, Month) %>%
+  summarize(TotalCalls = n())
+
+# Print the result
+print(result)
+
+```
+
+```{r}
+# Assuming you have already generated the 'result' data frame
+result <- result %>% arrange(desc(TotalCalls))
+
+# Print the sorted result
+print(result)
+
+```
+
+Q3. Let's turn to the Baltimore City data. You're interested in exploring calls in zip codes with a high percentage of children under 18. Write code to isolate calls in zip codes where the percentage of under 18 population is at least 75% and then show the zip code and population and how many calls occurred in each of those zip codes. 
+
+Where are those zip codes in the city?
+
+Add a column to your code that calculates the number of calls per 1,000 people for those zip codes. To calculate a per capita rate, you might find this short guide handy: https://observablehq.com/@palewire/per-capita-calculator.
+
+Which zip code has the highest rate of calls per 1,000 people? Find the neighborhoods in that zip code that are listed in the data - you can use group_by or distinct to do this. What are some of those neighborhoods, and what else can you tell me about the population there?
+
+A3. 21201, 21202, 21205, 21213, 21216, 21217, 21223.... MOSTLY BALTIMORE LOCATIONS HARLEM PARK AND PENN NORTH... Gay Street(21213) has the highest rate of calls per 1000 people. Almost 70% of the population within Gay Street are black or non hispanic...
+
+```{r}
+library(dplyr)
+
+# Assuming your data frame is named 'df'
+
+# Filter the data to include only rows where 'pct_under_17' is at least 75%
+filtered_data <- joined_data_bmoremdzc %>%
+  filter(pct_under_18 >= 75)
+
+# Group the filtered data by zip code, summarize the total number of calls
+result <- filtered_data %>%
+  group_by(zip_code) %>%
+  summarize(TotalCalls = n())
+
+# Print the result
+print(result)
+
+
+```
+
+```{r}
+library(dplyr)
+
+# Assuming your data frame is named 'df'
+
+# Filter the data to include only rows where 'pct_under_17' is at least 75%
+filtered_data <- joined_data_bmoremdzc %>%
+  filter(pct_under_18 >= 75)
+
+# Group the filtered data by zip code, summarize the total number of calls and percentage of people under 18
+result <- filtered_data %>%
+  group_by(zip_code) %>%
+  summarize(TotalCalls = n(), AveragePctUnder17 = mean(pct_under_18))
+
+# Print the result
+print(result)
+
+```
+
+```{r}
+library(dplyr)
+
+# Assuming your data frame is named 'df'
+
+# Filter the data to include only rows where 'pct_under_17' is at least 75%
+filtered_data <- joined_data_bmoremdzc %>%
+  filter(pct_under_18 >= 75)
+
+# Group the filtered data by zip code, summarize the total number of calls and percentage of people under 18
+result <- filtered_data %>%
+  group_by(zip_code) %>%
+  summarize(TotalCalls = n(), AveragePctUnder18 = mean(pct_under_18))
+
+# Sort the result by the "AveragePctUnder17" column in descending order
+result <- result %>%
+  arrange(desc(AveragePctUnder18))
+
+# Print the sorted result
+print(result)
+
+```
+
+```{r}
+library(dplyr)
+
+# Assuming your data frame is named 'df'
+
+# Filter the data to include only rows where 'pct_under_17' is at least 75%
+filtered_data <- joined_data_bmoremdzc %>%
+  filter(pct_under_18 >= 75)
+
+# Group the filtered data by zip code and summarize the total number of calls, average percentage of people under 18, and total population
+result <- filtered_data %>%
+  group_by(zip_code) %>%
+  summarize(
+    TotalCalls = n(),
+    AveragePctUnder18 = mean(pct_under_18),
+    TotalPopulation = sum(population)
+  )
+
+# Calculate the number of calls per 1,000 people
+result <- result %>%
+  mutate(CallsPer1000 = (TotalCalls / TotalPopulation) * 1000)
+
+# Find the zip code with the highest rate of calls per 1,000 people
+highest_rate_zip <- result %>%
+  filter(CallsPer1000 == max(CallsPer1000))
+
+# Print the zip code with the highest rate of calls per 1,000 people
+cat("Zip code with the highest rate of calls per 1,000 people:", highest_rate_zip$zip_code, "\n")
+
+# Find the neighborhoods in the highest rate zip code
+neighborhoods_in_highest_zip <- joined_data_bmoremdzc %>%
+  filter(zip_code == highest_rate_zip$zip_code) %>%
+  select(neighborhood) %>%
+  distinct()
+
+# Print the neighborhoods in the highest rate zip code
+print(neighborhoods_in_highest_zip)
+
+
+```
+
+Q4. Choose your own adventure: I want you to come up with a question you could ask of the Baltimore City data that combines both the calls and the demographic information. You must use both demographics and the overdose call data in your work.
+
+A4: I want to find a code that filters zip codes with over 200 total calls and a population of Black or non-Hispanics over 60%.
+
+```{r}
+library(dplyr)
+
+# Assuming your data frame is named 'df'
+
+# Filter the data to include only rows where 'pct_under_17' is at least 75%
+filtered_data <- joined_data_bmoremdzc %>%
+  filter(pct_under_18 >= 75)
+
+# Group the filtered data by zip code and summarize the total number of calls and average percentage of Black non-Hispanic population
+result <- filtered_data %>%
+  group_by(zip_code) %>%
+  summarize(
+    TotalCalls = n(),
+    AveragePctBlackNonHispanic = mean(pct_black_non_hispanic)
+  )
+
+# Filter for zip codes with over 200 total calls and a percentage of Black non-Hispanic population over 60%
+filtered_zip_codes <- result %>%
+  filter(TotalCalls > 200, AveragePctBlackNonHispanic > 60)
+
+# Print the filtered zip codes
+print(filtered_zip_codes)
+
+
+```
