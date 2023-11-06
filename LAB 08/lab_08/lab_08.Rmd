@@ -1,0 +1,236 @@
+---
+title: "lab_08"
+author: "derek willis"
+date: "2023-04-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load libraries and establish settings
+
+**Task** Create a codeblock and load appropriate packages and settings for this lab. We'll be making some charts, working with dates and retrieving Census data.
+```{r}
+install.packages('ggthemes')
+library(ggthemes)
+library(tidyverse)
+library(lubridate)
+```
+
+
+## Load and modify data
+
+**Task** Create a codeblock and load the following data from the data folder:
+
+* Prince George's County 911 Overdose Calls
+```{r}
+prince_georges_2022_overdoses <- read_csv("data/prince_georges_2022_overdoses.csv")
+```
+```{r}
+prince_georges_2022_overdoses
+```
+
+
+You will need to create columns for the date, week and month based on the existing `datetime` column.
+
+```{r}
+#create column for the date
+# Load the lubridate package if you haven't already
+library(lubridate)
+
+# Assuming your_data is the name of your data frame and datetime is the column name
+prince_georges_2022_overdoses$date_of_call <- as.Date(prince_georges_2022_overdoses$datetime)
+#
+prince_georges_2022_overdoses <- prince_georges_2022_overdoses |> 
+  mutate(week_of_year = isoweek(date_of_call))
+#
+prince_georges_2022_overdoses <- prince_georges_2022_overdoses %>%
+  mutate(month_of_call = month(date_of_call, label = TRUE))
+
+# View the updated data frame
+head(prince_georges_2022_overdoses)
+
+```
+
+## Questions 
+
+**Q1.** Which month saw the greatest percentage of total calls? Create a dataframe that calculates the percentage of all calls that each month's calls represents. Make a bar chart from that dataframe. Your bar chart must have:
+
+* A clear title that states the main idea/finding
+* Good labels for the x & y axis and a caption for the source, which is Prince George's County EMS.
+* Readable bars - the values shouldn't be overlapping
+
+Compare the results here to those from the pre_lab_08 bar chart - are there major differences in the months with the highest and lowest figures? Describe that below.
+
+**A1.** December saw the greatest percentage of total calls... When you compare it to the pre lab, I would say that there is much less of a difference between the highest and lowest figure... Highest here is 10.9 and lowest is only 6.5...
+```{r}
+# Load required libraries (if not already loaded)
+# install.packages("dplyr") # If not already installed
+library(dplyr)
+
+# Assuming your dataframe is already loaded and named prince_georges_2022_overdoses
+
+# Calculate the total number of calls
+total_calls <- nrow(prince_georges_2022_overdoses)
+
+# Group the data by the "month_of_call" column and calculate the count for each month
+monthly_calls <- prince_georges_2022_overdoses %>%
+  group_by(month_of_call) %>%
+  summarize(monthly_call_count = n())
+
+# Calculate the percentage of total calls for each month
+monthly_calls <- monthly_calls %>%
+  mutate(percentage_of_total_calls = (monthly_call_count / total_calls) * 100)
+
+# Find the month with the greatest percentage of total calls
+greatest_percentage_month <- monthly_calls %>%
+  filter(percentage_of_total_calls == max(percentage_of_total_calls))
+
+# Print the dataframe showing quantities, percentages, and the greatest percentage month
+print(monthly_calls)
+
+# Print the month with the greatest percentage
+print(greatest_percentage_month)
+
+```
+
+```{r}
+# Load required libraries (if not already loaded)
+# install.packages("ggplot2") # If not already installed
+library(ggplot2)
+
+# Assuming you have already calculated the "monthly_calls" dataframe
+
+# Create the bar chart
+bar_chart <- ggplot(monthly_calls, aes(x = month_of_call, y = monthly_call_count)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(
+    title = "Call Counts by Month in Prince George's County EMS",
+    x = "Month",
+    y = "Call Count",
+    caption = "Source: Prince George's County EMS"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Print the bar chart
+print(bar_chart)
+
+```
+
+
+**Q2.** Let's visualize this data on a weekly basis using a line chart. As in Q1, generate a dataframe with the total number of calls for each week, and then create a line chart to show the distribution of calls over time. Your line chart must have:
+
+* A clear title that states the main idea/finding
+* Good labels for the x & y axis and a caption for the source, which is Prince George's County EMS.
+* Readable labels
+
+Describe the pattern of results; you may want to look at the data to dig into particular outliers.
+
+**A2.** 
+This makes it interesting because the call count reached its peak around week 24 25 of the year... Where as we already discovered that December had the most calls... But, at the same time, there is a much more frequency of spikes towards the end of the year... 
+
+```{r}
+# Assuming your original dataframe is "prince_georges_2022_overdoses"
+
+# Load required libraries (if not already loaded)
+# install.packages("dplyr") # If not already installed
+# install.packages("ggplot2") # If not already installed
+library(dplyr)
+library(ggplot2)
+
+# Aggregate the data to get total calls for each week
+weekly_calls <- prince_georges_2022_overdoses %>%
+  mutate(week_of_call = lubridate::week(date_of_call)) %>%
+  group_by(week_of_call) %>%
+  summarize(weekly_call_count = n())
+
+# Create the line chart
+line_chart <- ggplot(weekly_calls, aes(x = week_of_call, y = weekly_call_count)) +
+  geom_line(color = "blue") +
+  labs(
+    title = "Weekly Distribution of Calls in Prince George's County EMS",
+    x = "Week",
+    y = "Call Count",
+    caption = "Source: Prince George's County EMS"
+  ) +
+  theme_minimal()
+
+# Print the line chart
+print(line_chart)
+
+```
+
+**Q3.**  A scatterplot is a type of chart that helps us see relationships between two variables. One variable goes on the x axis, the other on the y axis.  For each row/observation in our data, a scatterplot puts a circle (or a "point") where the two variables intersect on a grid. 
+
+Statisticians use scatterplots to show graphically whether one variable is correlated -- related, in a statistical sense -- with another variable.  A classic example is the [relationship between ice cream sales and temperature](https://www.mathsisfun.com/data/scatter-xy-plots.html). The scatterplot below -- press play to load the image -- shows that relationship, that an increase in temperature is associated with an increase in ice cream sales. When it's 12C, sales are 200 dollars, and when it's hotter, 25C, sales are 600 dollars.
+
+```{r}
+knitr::include_graphics("https://www.mathsisfun.com/data/images/scatter-ice-cream1.svg")
+```
+
+We're going to use a scatterplot a little differently, to get a visual sense of two key variables: 
+
+Our question is: does the median income in a zip code have any relationship to the number of overdose 911 calls in that zip code?
+
+To answer this question, do the following:
+
+1. Generate a dataframe with the number of 911 calls for each zip code.
+2. Get data from the Census Bureau showing median household income for Maryland zip codes.
+3. Join those two dataframes on their zip code columns, starting with the 911 calls dataframe.
+4. Make a scatterplot showing the total calls and median income. I didn't show you how to do this, so look it up! Googling "ggplot scatterplot" is a good start.
+5. Give it an appropriate title, source, and x and y axis titles.
+6. Add a label for each point that shows the zip code using geom_text() - see some examples of its use at https://ggplot2.tidyverse.org/reference/geom_text.html#ref-examples. Try to make the names as easy to read as possible by avoiding overlap.
+7. In the answer space below, describe what you see and answer the questions posed above. In a general sense, what do you think this means? Feel free to consider the actual raw values: how would you report out the main point(s) of this chart?
+
+**A3.**  
+
+```{r}
+library(dplyr)
+
+# Calculate the number of 911 calls for each zip code
+calls_by_zip <- prince_georges_2022_overdoses %>%
+  group_by(zipcode) %>%
+  summarize(total_calls = n())
+
+head(calls_by_zip)
+
+```
+```{r}
+
+library(tidycensus)
+
+census_api_key("3e07ad10262f55e86661f2bb19ef01db7ecb02b5", install=TRUE, overwrite=TRUE)
+# Load the data for median household income by zip code in Maryland for 2022
+
+```
+```{r}
+readRenviron("~/.Renviron")
+```
+
+```{r}
+# Load and install necessary libraries
+# install.packages("tidycensus") # If not already installed
+library(tidycensus)
+# Define your Census API key (replace 'YOUR_API_KEY' with your actual API key)
+census_api_key("3e07ad10262f55e86661f2bb19ef01db7ecb02b5")
+
+md <- get_acs(geography = "",
+              variables = c(medincome = "B19013_001"),
+              state = "MD",
+              year = 2021)
+
+md <- md |> arrange(desc(estimate)) |> top_n(20, estimate)
+
+md
+
+```
+
+```{r}
+# Join the dataframes on zip code
+merged_data <- left_join(calls_by_zip, median_income_data, by = "total_calls")
+
+```
+
