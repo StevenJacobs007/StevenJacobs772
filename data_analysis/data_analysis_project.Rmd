@@ -1,0 +1,100 @@
+---
+title: "data_analysis_project"
+author: "Alisha Camacho, Steven Jacobs and Pablo Suarez"
+date: "2023-11-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## INTRODUCTION
+
+Welcome to the JOUR772 data analysis markdown file of Alisha Camacho, Steven Jacobs and Pablo Suarez. Below, we are analyzing a Kaggle data set containing data collected on board games from the BoardGameGeek (BGG) website in February 2021. BGG, the largest online collection of board game data, relies on its voluntary community to build its database by providing site contributions in the form of board game reviews, ratings, images, videos and live discussion forums, among others.
+
+This data set incorporates those user contributions and contains information on roughly 20,000 board games scraped from the BGG rankings as of the date of collection by the original data set creators. It does not feature any unranked games, as those games do not meet the 30 vote threshold needed to be eligible for rankings.
+
+Columns in this data set include a game's unique BGG ID, name, year published, minimum players required, maximum players allowed, average play time, minimum age required, number of users who rated the game, average rating, the BGG rank, complexity average, number of owned users, mechanics and domains.
+
+***Link to the data set: <https://www.kaggle.com/datasets/andrewmvd/board-games/>***
+
+## ***Project Milestone #1***
+
+We were asked to craft newsworthy questions that we'd like to attempt to answer about this data set. Our questions include:
+
+-   What is the relationship, if any, between average play-time impact average rating?
+
+-   How are the games for 4 or 5+ players rated differently or more frequently than games intended for fewer players? Same for solo games.
+
+-   Measuring by year and decade, what are the top average board games, domains and mechanics?
+
+-   How does the complexity of board games vary based on the recommended minimum age?
+
+-   What are the highest-rated games that are the most owned and have the most users rated? How does this list compare to the BGG rankings?
+
+-   What are the 25 oldest games in our data set, how much did they cost on release and how much do they cost now? Did they increase in price, and if so, does that follow the inflation rate?
+
+## ***Project Milestone #2***
+
+In this section of the project, we were tasked with creating our markdown file and accomplishing the following tasks:
+
+-   Load and clean the core data set to prepare for analysis.
+
+-   Show basic exploratory analysis to demonstrate an understanding of the data set. Include the number of rows and columns, any obvious limitations or flaws and any reasons why it might not be able to answer the research questions.
+
+We began by loading our libraries and settings.
+
+```{r}
+
+# Turn off scientific notation
+options(scipen=999)
+
+# Load our libraries
+library(tidyverse)
+library(janitor)
+library(refinr)
+library(lubridate)
+library(dplyr)
+library(readr)
+
+```
+
+Next, we loaded in our core data set. Upon reading it in at first, we received this error message -- "Error in read.table(file = file, header = header, sep = sep, quote = quote, : more columns than column names". The error suggests that this CSV file is delimited by a character other than a comma. Our data set is separated instead by a semicolon, so we used the sep parameter when reading the file in to be able to view it properly.
+
+Once the data set was properly loaded, we used the clean_names function to make all of the column headings lowercase. Then we focused on converting our columns into the proper data types. For the rating average and complexity average columns, these were initially imported as character type columns. Given that we might want to do further calculations with these average ratings, we converted them to numeric type columns. To do that, we first had to replace the commas within those columns to decimal points. We then used the mutate function to call in the columns and convert them as we've been taught.
+
+We also converted the id and bgg_rank columns from an integer type to a character type as these are not numeric values we want to use in calculations, rather they are intended to serve as unique identifiers for the board games.
+
+Here is the code showing how we imported and cleaned our data:
+
+```{r}
+
+bgg_dataset <- read.csv("data/bgg_dataset.csv", sep = ";") |>
+   clean_names()
+
+bgg_dataset$rating_average <- gsub(",", ".", bgg_dataset$rating_average)
+bgg_dataset$complexity_average <- gsub(",", ".", bgg_dataset$complexity_average)
+
+bgg_dataset <- bgg_dataset |>
+  mutate(id = as.character(id),
+         bgg_rank = as.character(bgg_rank),
+         rating_average = as.numeric(rating_average), 
+         complexity_average = as.numeric(complexity_average))
+
+glimpse(bgg_dataset)
+```
+
+Explanatory Analysis of the Data Set:
+
+Number of Rows: 20,343
+
+Number of Columns: 14
+
+Obvious Limitations or Flaws:
+
+-   We believe we are going to encounter some issues with how the data within the mechanics column is nested. The amount of information in each individual entry in that column will make it difficult to group or sort. We anticipate that we'll need to frequently filter results from that column. The same could be said for the domains column, although that column doesn't nearly have as much data nested within each row.
+
+-   We wish that this data set included each game's price on release. This is outside data that we'd have to create a data frame for and merge it to our bgg_dataset (or a smaller data set) in order to answer our last question.
+
+## ***Project Milestone #3***
