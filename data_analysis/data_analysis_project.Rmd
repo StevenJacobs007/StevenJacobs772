@@ -31,6 +31,66 @@ We were asked to craft newsworthy questions that we'd like to attempt to answer 
 
 -   How does the complexity of board games vary based on the recommended minimum age?
 
+```{r}
+# Turn off scientific notation
+options(scipen=999)
+
+# Load our libraries
+library(tidyverse)
+library(janitor)
+library(refinr)
+library(lubridate)
+library(dplyr)
+library(readr)
+library(ggplot2)
+```
+
+```{r}
+# Assuming bgg_dataset is your dataset of board games
+
+# Calculate the average minimum age
+average_min_age <- mean(bgg_dataset$min_age, na.rm = TRUE)
+
+# Print the average minimum age
+print(average_min_age)
+
+
+```
+
+```{r}
+# Assuming bgg_dataset is your dataset of board games
+
+# Calculate the average complexity score
+average_complexity <- mean(bgg_dataset$complexity_average, na.rm = TRUE)
+
+# Print the average complexity score
+print(average_complexity)
+
+```
+
+```{r}
+# Assuming bgg_dataset is your dataset of board games
+
+# Sort the dataset by min_age in descending order and select the top 1251 rows
+games_highest_min_age <- bgg_dataset[order(-bgg_dataset$min_age), c('name', 'min_age', 'complexity_average')][1:1251, ]
+
+# Display the list of games with the highest minimum age, sorted by min age requirement
+print(games_highest_min_age)
+
+```
+
+```{r}
+# Assuming bgg_dataset is your dataset of board games
+
+# Sort the dataset by min_age in ascending order and select the top 1251 rows
+games_lowest_min_age <- bgg_dataset[order(bgg_dataset$min_age), c('name', 'min_age', 'complexity_average')][1:1251, ]
+
+# Display the list of games with the lowest minimum age, sorted by min age requirement
+print(games_lowest_min_age)
+
+```
+
+Analysis... Out of the 20,343 board games, they tend to have a recommended minimum age of approximately 9.6 years old. In relation to the complexity of the games, the average complexity score across these games is around 1.99. When you consider how the complexity varies based on the recommended minimum age, 
 -   What are the highest-rated games that are the most owned and have the most users rated? How does this list compare to the BGG rankings?
 
 -   What are the 25 oldest games in our data set, how much did they cost on release and how much do they cost now? Did they increase in price, and if so, does that follow the inflation rate?
