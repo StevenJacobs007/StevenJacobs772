@@ -81,7 +81,7 @@ But where in Maryland are these places? We can simply plot them on a longitude-l
 
 ### Task: Run code
 
-**Task** Run the following code. Describe the output in the space below. **Answer** It gives us a cloropeth map... I would assume divided uo based on zip code.
+**Task** Run the following code. Describe the output in the space below. **Answer** It gives us a cloropeth map... I would assume divided up based on zip code.
 
 ```{r}
 md_zips |>
