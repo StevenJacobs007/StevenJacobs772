@@ -1,0 +1,133 @@
+---
+title: "GRAD STUDENT PROJECT"
+output: html_document
+date: "2023-12-05"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+SOURCE LINK: https://opendata.maryland.gov/Energy-and-Environment/Power-Outages-Zipcode/nktk-ei6p
+
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(ggplot2)
+```
+ 
+```{r}
+Power_Outages_._Zipcode
+```
+
+PROFILE:
+This dataframe contains aggregated power outage data by ZIP Code in the state of Maryland. This data was created and is maintained by the Maryland Department of Information Technology (MD DoIT), in connection with the state's Maryland Open Data Portal Programming.
+
+Each row represents a specific date that a power outage was confirmed and tracked within the state of Maryland. It is imperative to note that each row represents an unique outage (unique_id), within a specific location in Maryland (zip_code), on a specific date in the year 2023 at a specific time of the day (date_time_of_outage). So, there could be instances where a zip code location could receive multiple outages in one day, at two separate times. Or, we could catch a zip code having multiple outages, just in one month... So that is something that we could develop a story with, which we will see later on...
+
+In my coding I will order the data to see which zip code held the most outages total, to see if we spot any trends within geographical locations, and with that, we can develop stories to try and develop the ground work to determine if theres a reason why these specific zip codes in Maryland are having so many outages...
+
+With my coding I should be able to find the total amount of outages within each zip code by month, and confirm those findings in my code with the itemized data from the Open Data Portal created by MD DoIT.
+
+
+Task 1: Cleaning Column Names
+
+All of the power outages tracked in this data range from November 13, 2023 to December 4, 2023. The first thing I wanted to accomplish in terms of cleaning the data, was renaming the column titles, just for a better understanding of what each column represents...
+
+```{r}
+names(Power_Outages_._Zipcode) <- c("unique_id", "zip_code", "number_of_outages", "date_time_of_outage")
+
+Power_Outages_._Zipcode
+```
+
+Task 2: Order from greatest number of outages by location/time to the lowest
+
+Now that the column titles are more transparent... I will now code to order the outages by location from the most tracked/confirmed to the least tracked/confirmed, to see if I can spot any interesting trends within the data regarding the time frames that these outages were confirmed.
+
+```{r}
+Power_Outages_._Zipcode <- Power_Outages_._Zipcode[order(-Power_Outages_._Zipcode$number_of_outages), ]
+
+Power_Outages_._Zipcode
+```
+
+With this code, we can determine that the zip code 21703 had the most outages from the MD DoIT tracked dates from November 13, 2023 to December 4, 2023 timeframes. With this, I will now do a code that will group together the total amount of outages by each zip code... One to see if this gives us another zip code at the top as the zip with the most outages regardless of date/time, as well as letting us know how much weight each zip code is truly carrying in this set of data... I will also take this new dataframe and make a chart, to truly show the difference of outages by each county!
+
+Task 3: Grouping the total amount of outages confirmed within each zip code in new df/make a chart with the new dataframe.
+
+```{r}
+library(dplyr)
+
+
+zip_code_totals <- Power_Outages_._Zipcode %>%
+  group_by(zip_code) %>%
+  summarize(total_outages = sum(number_of_outages, na.rm = TRUE)) %>%
+  arrange(desc(total_outages))
+
+zip_code_totals
+
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+
+ggplot(zip_code_totals, aes(x = reorder(zip_code, -total_outages), y = total_outages)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Total Outages by Zip Code",
+       x = "Zip Code",
+       y = "Total Outages") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        axis.ticks.x = element_blank()) +
+  scale_x_discrete(labels = function(x) ifelse(seq_along(x) %% 10 == 0, x, ""))
+
+
+```
+
+
+With this, we now know that it is acutally the zip code 21122 that had the most confirmed outages within the tracked data from MD DoIT's open data portal... This is the geographical location of Anne Arundel County, Maryland. I feel like we can pitch the potential story idea asking what could be the direct cause of 28,301 power outages in Anne Arundel County, Maryland from November 13, 2023 to December 4, 2023?
+
+Task 4: Create a map highlighting the 21122 zip code and its outages, to help further clarify where exactly the 21122 zip location lies in the state of Maryland, to see if that can further our research for this story.
+
+```{r}
+# Load necessary libraries
+library(sf)
+library(ggplot2)
+
+zip_shapefile <- st_read("path/to/zip_code_shapefile") # Replace with the path to your shapefile
+
+
+zip_21122 <- filter(zip_code_totals, zip_code == "21122")
+
+
+zip_21122_shape <- zip_shapefile[zip_shapefile$ZIPCODE == "21122", ]
+
+
+ggplot() +
+  geom_sf(data = zip_shapefile, fill = "lightgray") +
+  geom_point(data = zip_21122, aes(x = Longitude, y = Latitude, size = total_outages), color = "red", alpha = 0.8) +
+  labs(title = "Zip Code 21122 - Frequency of Outages",
+       x = "Longitude",
+       y = "Latitude",
+       size = "Total Outages") +
+  theme_minimal()
+
+```
+
+I am not sure why this is happening, but I am unable to execute anymore coding... Whether this is due to the wifi connection I am left using right now, or the code I am trying to execute is wrong, but I literally cannot get anymore codes to go through. So I am going to just continue with my remaining questions and put this in with my limitations, with the hopes that I can receive some partial credit for this...
+
+Question/Pitch 2: After observing the data, how can we assess the severity of weather events having an immediate impact on power outages in these specific locations, based on the date/time these outages were tracked? 
+
+How to solve/research to be made:
+To determine this, I feel like we would have to analyze the data, recognizing the zip codes with the most outages during specific times of the year... Along with that, research to see if there were any catastrophic weather events that took place during those exact dates/times. And if we see a pattern/multiple occurrences of outages on a specific day, we could then possibly find a correlation between the weather/temperature during those specific dates/times and the frequent outages...
+
+Question/Pitch 3: How do certain zip code locations tracked in the data respond to outages differently? Are we able to find a significant trend to where we see some zip code locations combat these outages (get their power back on) more frequently than others? Looking at the data, you can see that there are multiple outages on some days, and some with just one outage... There must be a way to research to see if there is a direct correlation to that...
+
+How to solve/research to be made: With this, we would have to use a code to analyze the dates with multiple outages... And track the duration of outages between the first to the second, and so on... And with that, we would have to do research to see how exactly these zip codes are getting their power turned back on, noting the response time, as well as any factors during that day (weather events throughout the time span/ability for emergency electrical companies such as BGE and others to go out to these power surges) that would cause the power to turn back off, and repeat the cycle again. With this I feel like we would be able to get a good tell tale of how different zip codes respond to their outages either more swiftly or slowly than others...
+
+Conclusion:
+
+The most promising story in my opinion would have to be my first question, as it would give a direct tell tale as to why the zip code 21122 had the most outages in the tracked data from the MD DoIT's open data portal. From there, it allows us to further dive into the other questions I developed, because we can correlate specific events that could have took place such as weather, into the deeper breakdown of how quickly these zip codes responded to these outages pertaining to the frequency... My limitation to my inability to code really dissapoints me, because not only will this deteriorate my grade but prevent me from doing my further research. But, I feel like this notebook does a decent breakdown of the MD DoIT's data, giving viewers a better explanation as to how many outages occurred in the state of Maryland from November 13, 2023 to December 4, 2023. A question I wanted to see if I could answer was to see if the recent power outages I have personally experienced due to some unforeseen circumstances over the past week showed up in this data... Which makes it extremely ironic that I chose this topic to begin with. 
+
